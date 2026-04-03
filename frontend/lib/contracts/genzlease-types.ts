@@ -92,7 +92,50 @@ export interface DisputePrecedentMatch {
   similarity: number;
 }
 
-export interface GenZLeaseWriteResult {
-  txHash: `0x${string}`;
-  receipt: TransactionReceipt;
+export interface ListPropertyInput {
+  titleNumber: string;
+  ownerFullName: string;
+  propertyAddress: string;
+  postcode: string;
+  pricePerMonth: bigint;
+  minDurationMonths: number;
+  maxDurationMonths: number;
+  depositMonths: number;
+  availableFrom: number;
+  bedrooms: number;
+  bathrooms: number;
+  propertyType: string;
+  description: string;
+  amenities?: string;
+  imagesIpfs?: string;
+  availableTo?: number;
+}
+
+export interface UpdateListingTermsInput {
+  listingId: string;
+  pricePerMonth?: bigint;
+  availableFrom?: number;
+  availableTo?: number;
+  minDurationMonths?: number;
+  maxDurationMonths?: number;
+  description?: string;
+  amenities?: string;
+  imagesIpfs?: string;
+}
+
+export interface RequestLeaseInput {
+  listingId: string;
+  startDate: number;
+  durationMonths: number;
+  messageToLandlord?: string;
+}
+
+export interface RaiseDisputeInput {
+  leaseId: string;
+  reason: string;
+  evidenceUrls: string[];
+}
+
+export interface GenZLeaseWriteResult extends TransactionReceipt {
+  hash: string;
 }

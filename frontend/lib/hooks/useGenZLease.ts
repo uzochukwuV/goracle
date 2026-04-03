@@ -3,7 +3,18 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GenZLease from "../contracts/GenZLease";
-import type { DisputePrecedentMatch, LandlordProfile, LeaseAgreement, PlatformStats, PropertyListing, TenantProfile } from "../contracts/genzlease-types";
+import type {
+  DisputePrecedentMatch,
+  LandlordProfile,
+  LeaseAgreement,
+  ListPropertyInput,
+  PlatformStats,
+  PropertyListing,
+  RaiseDisputeInput,
+  RequestLeaseInput,
+  TenantProfile,
+  UpdateListingTermsInput,
+} from "../contracts/genzlease-types";
 import { getContractAddress, getStudioUrl } from "../genlayer/client";
 import { useWallet } from "../genlayer/wallet";
 import { configError, error, success } from "../utils/toast";
@@ -147,4 +158,107 @@ export function useSetPaused() {
       error("Failed to update pause state", { description: err.message });
     },
   });
+}
+
+function useGenZLeaseMutation<TVariables>(
+  mutationFn: (contract: GenZLease, variables: TVariables) => Promise<unknown>,
+  successTitle: string,
+  successDescription?: string
+) {
+  const contract = useGenZLeaseContract();
+  const { address } = useWallet();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (variables: TVariables) => {
+      if (!contract) throw new Error("Contract not configured");
+      if (!address) throw new Error("Wallet not connected");
+      return mutationFn(contract, variables);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["genzlease"] });
+      success(successTitle, successDescription ? { description: successDescription } : undefined);
+    },
+    onError: (err: Error) => {
+      error("Transaction failed", { description: err.message });
+    },
+  });
+}
+
+export function useListProperty() {
+  return useGenZLeaseMutation<ListPropertyInput>(
+    (contract, payload) => contract.listProperty(payload),
+    "Property listed",
+    "Listing submitted for institutional verification."
+  );
+}
+
+export function useUpdateListingTerms() {
+  return useGenZLeaseMutation<UpdateListingTermsInput>(
+    (contract, payload) => contract.updateListingTerms(payload),
+    "Listing terms updated"
+  );
+}
+
+export function useVerifyOwnership() {
+  return useGenZLeaseMutation<string>(
+    (contract, listingId) => contract.verifyOwnership(listingId),
+    "Ownership verification requested"
+  );
+}
+
+export function useRequestLease() {
+  return useGenZLeaseMutation<RequestLeaseInput>(
+    (contract, payload) => contract.requestLease(payload),
+    "Lease request submitted"
+  );
+}
+
+export function useAcceptLease() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.acceptLease(leaseId),
+    "Lease accepted"
+  );
+}
+
+export function usePayDepositAndFirstMonth() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.payDepositAndFirstMonth(leaseId),
+    "Deposit and first month paid"
+  );
+}
+
+export function usePayMonthlyRent() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.payMonthlyRent(leaseId),
+    "Monthly rent payment submitted"
+  );
+}
+
+export function useClaimRent() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.claimRent(leaseId),
+    "Rent claimed"
+  );
+}
+
+export function useCompleteLease() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.completeLease(leaseId),
+    "Lease completed"
+  );
+}
+
+export function useRaiseDispute() {
+  return useGenZLeaseMutation<RaiseDisputeInput>(
+    (contract, payload) => contract.raiseDispute(payload),
+    "Dispute raised"
+  );
+}
+
+export function useResolveDispute() {
+  return useGenZLeaseMutation<string>(
+    (contract, leaseId) => contract.resolveDispute(leaseId),
+    "Dispute resolution requested"
+  );
 }

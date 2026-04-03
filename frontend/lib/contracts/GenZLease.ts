@@ -6,7 +6,11 @@ import type {
   LeaseAgreement,
   PlatformStats,
   PropertyListing,
+  ListPropertyInput,
+  RaiseDisputeInput,
+  RequestLeaseInput,
   TenantProfile,
+  UpdateListingTermsInput,
 } from "./genzlease-types";
 
 class GenZLease extends GenLayerContractBase {
@@ -51,6 +55,97 @@ class GenZLease extends GenLayerContractBase {
 
   async setPaused(paused: boolean): Promise<TransactionReceipt> {
     const txHash = await this.write("set_paused", [paused]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async listProperty(input: ListPropertyInput): Promise<TransactionReceipt> {
+    const txHash = await this.write("list_property", [
+      input.titleNumber,
+      input.ownerFullName,
+      input.propertyAddress,
+      input.postcode,
+      input.pricePerMonth,
+      input.minDurationMonths,
+      input.maxDurationMonths,
+      input.depositMonths,
+      input.availableFrom,
+      input.bedrooms,
+      input.bathrooms,
+      input.propertyType,
+      input.description,
+      input.amenities ?? "[]",
+      input.imagesIpfs ?? "[]",
+      input.availableTo ?? 0,
+    ]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async updateListingTerms(input: UpdateListingTermsInput): Promise<TransactionReceipt> {
+    const txHash = await this.write("update_listing_terms", [
+      input.listingId,
+      input.pricePerMonth ?? BigInt(0),
+      input.availableFrom ?? 0,
+      input.availableTo ?? 0,
+      input.minDurationMonths ?? 0,
+      input.maxDurationMonths ?? 0,
+      input.description ?? "",
+      input.amenities ?? "",
+      input.imagesIpfs ?? "",
+    ]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async verifyOwnership(listingId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("verify_ownership", [listingId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async requestLease(input: RequestLeaseInput): Promise<TransactionReceipt> {
+    const txHash = await this.write("request_lease", [
+      input.listingId,
+      input.startDate,
+      input.durationMonths,
+      input.messageToLandlord ?? "",
+    ]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async acceptLease(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("accept_lease", [leaseId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async payDepositAndFirstMonth(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("pay_deposit_and_first_month", [leaseId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async payMonthlyRent(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("pay_monthly_rent", [leaseId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async claimRent(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("claim_rent", [leaseId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async completeLease(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("complete_lease", [leaseId]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async raiseDispute(input: RaiseDisputeInput): Promise<TransactionReceipt> {
+    const txHash = await this.write("raise_dispute", [
+      input.leaseId,
+      input.reason,
+      input.evidenceUrls,
+    ]);
+    return (await this.waitForAccepted(txHash)) as TransactionReceipt;
+  }
+
+  async resolveDispute(leaseId: string): Promise<TransactionReceipt> {
+    const txHash = await this.write("resolve_dispute", [leaseId]);
     return (await this.waitForAccepted(txHash)) as TransactionReceipt;
   }
 }
